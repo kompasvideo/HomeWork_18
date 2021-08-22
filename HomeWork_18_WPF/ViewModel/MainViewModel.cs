@@ -21,11 +21,6 @@ namespace HomeWork_18_WPF.ViewModel
         public ObservableCollection<string> departments { get; set; } = new ObservableCollection<string>()
             {Const.personalName, Const.businessName, Const.VIPName};
         /// <summary>
-        /// Список клиентов банка
-        /// </summary>
-        public static ObservableCollection<Client> clients { get; set; } = new ObservableCollection<Client>();
-        Random rnd = new Random();
-        /// <summary>
         /// Выбранный клинт в списке
         /// </summary>
         public static Client SelectedClient { get; set; }
@@ -33,10 +28,6 @@ namespace HomeWork_18_WPF.ViewModel
         /// выбранный департамент в списке
         /// </summary>
         public static string SelectedDep { get; set; }
-        /// <summary>
-        /// CollectionViewSource для департаментов
-        /// </summary>
-        public static System.ComponentModel.ICollectionView Source;
         static bool isLoad = false;
 
         /// <summary>
@@ -73,9 +64,8 @@ namespace HomeWork_18_WPF.ViewModel
         /// </summary>
         static BankModel context;
         /// <summary>
-        /// Список клиентов для ListView "LVClients"
+        /// Список клиентов для ListView 
         /// </summary>
-        //public static System.ComponentModel.BindingList<Client> clientsList { get; set; }
         public static ObservableCollection<Client> clientsList { get; set; }
 
 
@@ -87,7 +77,7 @@ namespace HomeWork_18_WPF.ViewModel
                 context = new BankModel();
                 context.Clients.Load();
                 context.Departments.Load();
-                clientsList = context.Clients.Local;//.ToBindingList<Client>();
+                clientsList = context.Clients.Local;
                 isLoad = true;
             }
         }
@@ -348,22 +338,58 @@ namespace HomeWork_18_WPF.ViewModel
         /// Возвращяет Client из диалогового окна MoveMoney
         /// </summary>
         /// <param name="employee"></param>
-        public static void ReturnMoveMoney(Dictionary<Client, uint> client)
+        public static void ReturnMoveMoney(Dictionary<Client, int> client)
         {
-            uint moveMoney;
+            int moveMoney;
             Client moveClient;
-            foreach (KeyValuePair<Client, uint> kvp in client)
+            foreach (KeyValuePair<Client, int> kvp in client)
             {
                 moveClient = kvp.Key;
                 moveMoney = kvp.Value;
                 if (SelectedClient.Money >= moveMoney)
                 {
-                    //Client clientMinus = SelectedClient - moveMoney;
-                    //Client clientPlus = moveClient + moveMoney;
-                    //SelectedClient.Money = clientMinus.Money;
-                    //moveClient.Money = clientPlus.Money;
-                    //Source.Filter = new Predicate<object>(MyFilter);
-                    Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.MoveMoney, $"Переведена сумма '{moveClient.Money}' с счёта '{SelectedClient.Name}' на счёт '{moveClient.Name}'"));
+                    int moveClientMoney = moveMoney;
+                    string SelectedClientName = SelectedClient.Name;
+                    string moveClientName = moveClient.Name;
+
+                    BankModel contextLocal = new BankModel();
+                    contextLocal.Clients.Load();
+                    foreach (var clientL in contextLocal.Clients)
+                    {
+                        if (clientL.Id == SelectedClient.Id)
+                            SelectedClient = clientL;
+                        if (clientL.Id == moveClient.Id)
+                            moveClient = clientL;
+                    }
+                    SelectedClient.Money -= moveMoney;
+                    moveClient.Money += moveMoney;
+                    contextLocal.SaveChanges();
+
+                    int id = 0;
+                    switch (SelectedDep)
+                    {
+                        case "Физ. лицо":
+                            id = 1;
+                            break;
+                        case "Юр. лицо":
+                            id = 2;
+                            break;
+                        case "VIP":
+                            id = 3;
+                            break;
+                    }
+                    IQueryable<Client> clients1 = null;
+                    if (SelectedDep != null)
+                        clients1 = context.Clients.Where(e => e.Department == id);
+                    else
+                        clients1 = context.Clients;
+                    clientsList.Clear();
+                    foreach (var item in clients1)
+                    {
+                        if (!clientsList.Contains(item))
+                            clientsList.Add(item);
+                    }
+                    Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.MoveMoney, $"Переведена сумма '{moveClientMoney}' с счёта '{SelectedClientName}' на счёт '{moveClientName}'"));
                 }
                 else
                 {

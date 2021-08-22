@@ -10,7 +10,7 @@
     <Window.Resources>
         <viewmodels:MainViewModel x:Key="main"/>
         <viewmodels:MoveMoneyViewModel x:Key="move"/>
-        <CollectionViewSource Source="{Binding Source={StaticResource main}, Path=clients}" x:Key="Cvs"/>
+        <CollectionViewSource Source="{Binding Source={StaticResource move}, Path=clientsList}" x:Key="Cvs"/>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>

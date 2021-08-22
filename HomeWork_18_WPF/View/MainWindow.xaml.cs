@@ -5,8 +5,6 @@ using HomeWork_18_WPF.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Data;
-using System.Data.Entity;
 
 namespace HomeWork_18_WPF
 {
@@ -15,21 +13,11 @@ namespace HomeWork_18_WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-
         public MainWindow()
         {
             InitializeComponent();
         }
-        /// <summary>
-        /// Выполняется при загрузке ListView
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ListView_Loaded(object sender, RoutedEventArgs e)
-        {
-            LVClients.ItemsSource = MainViewModel.clientsList;
-        }
-
+        
         /// <summary>
         /// Подписывается на сообщение ReturnAddClient
         /// </summary>
@@ -38,7 +26,7 @@ namespace HomeWork_18_WPF
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Messenger.Default.Register <Client >(MainViewModel.ReturnAddClient);
-            Messenger.Default.Register<Dictionary<Client, uint>>(MainViewModel.ReturnMoveMoney);
+            Messenger.Default.Register<Dictionary<Client, int>>(MainViewModel.ReturnMoveMoney);
             Messenger.Default.Register<DepositC>(MainViewModel.ReturnAddDepositNoCapitalize);
             Messenger.Default.Register<DepositPlusCapitalize>(MainViewModel.ReturnAddDepositCapitalize);
             Messenger.Default.Register<BankDepartment>(AddDepositCapitalizeViewModel.SetBankDepartment);
@@ -55,7 +43,7 @@ namespace HomeWork_18_WPF
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             Messenger.Default.Unregister<Client>(MainViewModel.ReturnAddClient);
-            Messenger.Default.Unregister<Dictionary<Client, uint>>(MainViewModel.ReturnMoveMoney);
+            Messenger.Default.Unregister<Dictionary<Client, int>>(MainViewModel.ReturnMoveMoney);
             Messenger.Default.Unregister<DepositC>(MainViewModel.ReturnAddDepositNoCapitalize);
             Messenger.Default.Unregister<DepositPlusCapitalize>(MainViewModel.ReturnAddDepositCapitalize);
             Messenger.Default.Unregister<BankDepartment>(AddDepositCapitalizeViewModel.SetBankDepartment);

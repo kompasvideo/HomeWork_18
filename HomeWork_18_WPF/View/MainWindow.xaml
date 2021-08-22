@@ -11,7 +11,7 @@
         Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closed="Window_Closed">
     <Window.Resources>
         <viewmodels:MainViewModel x:Key="main"/>
-        <CollectionViewSource Source="{Binding Source={StaticResource main}, Path=context.Clients.Local}" x:Key="Cvs"/>
+        <CollectionViewSource Source="{Binding Source={StaticResource main}, Path=clientsList}" x:Key="Cvs"/>
     </Window.Resources>
     <DockPanel>
         <WrapPanel DockPanel.Dock="Top">
@@ -67,7 +67,7 @@
         <DockPanel Margin="0 5 5 5">
             <TextBlock Text="Клиенты:" FontWeight="Bold" DockPanel.Dock="Top" Margin="10 0 0 0"/>
             <ListView ItemsSource="{Binding Source={StaticResource Cvs}}" SelectedItem="{Binding SelectedClient}" 
-                  Loaded="ListView_Loaded" x:Name="LVClients" IsSynchronizedWithCurrentItem="True">
+                  IsSynchronizedWithCurrentItem="True">
                 <ListView.DataContext>
                     <Binding Source="{StaticResource main}"/>
                 </ListView.DataContext>
