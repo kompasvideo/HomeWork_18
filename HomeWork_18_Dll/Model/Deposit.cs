@@ -19,7 +19,7 @@ namespace HomeWork_18_WPF.Model
         /// <summary>
         /// Срок кредита в днях
         /// </summary>
-        public uint Days { get; set; }
+        public int Days { get; set; }
         public byte[] daysOnMonth = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
         public DepositC()
@@ -28,7 +28,7 @@ namespace HomeWork_18_WPF.Model
             DateBegin = DateTime.Now;
             Days = 365;
         }
-        public DepositC(DateTime dateBegin, float interestRate = 12f, uint days = 365)
+        public DepositC(DateTime dateBegin, float interestRate = 12f, int days = 365)
         {
             InterestRate = interestRate;
             DateBegin = dateBegin;

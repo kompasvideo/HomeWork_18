@@ -11,7 +11,7 @@ namespace HomeWork_18_WPF.Model
         public DepositPlusCapitalize() : base()
         {
         }
-        public DepositPlusCapitalize(DateTime dateBegin, float interestRate = 12f, uint days = 365) :
+        public DepositPlusCapitalize(DateTime dateBegin, float interestRate = 12f, int days = 365) :
             base(dateBegin, interestRate, days)
         {
         }

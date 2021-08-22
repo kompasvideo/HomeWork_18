@@ -31,6 +31,10 @@ namespace HomeWork_18_WPF.ViewModel
         static bool isLoad = false;
 
         /// <summary>
+        /// Id выбранного клиента
+        /// </summary>
+        public static int SelectedClientID { get; set; }
+        /// <summary>
         /// Имя выбранного клиента
         /// </summary>
         public string SelectClientName { get; set; }
@@ -67,8 +71,6 @@ namespace HomeWork_18_WPF.ViewModel
         /// Список клиентов для ListView 
         /// </summary>
         public static ObservableCollection<Client> clientsList { get; set; }
-
-
 
         public MainViewModel()
         {
@@ -126,6 +128,7 @@ namespace HomeWork_18_WPF.ViewModel
                     Client client = obj as Client;
                     if (client != null)
                     {
+                        SelectedClientID = client.Id;
                         SelectClientName = client.Name;
                         SelectClientMoney = client.Money;
                         switch ((int)client.Department)
@@ -340,61 +343,68 @@ namespace HomeWork_18_WPF.ViewModel
         /// <param name="employee"></param>
         public static void ReturnMoveMoney(Dictionary<Client, int> client)
         {
-            int moveMoney;
-            Client moveClient;
-            foreach (KeyValuePair<Client, int> kvp in client)
+            try
             {
-                moveClient = kvp.Key;
-                moveMoney = kvp.Value;
-                if (SelectedClient.Money >= moveMoney)
+                int moveMoney;
+                Client moveClient;
+                foreach (KeyValuePair<Client, int> kvp in client)
                 {
-                    int moveClientMoney = moveMoney;
-                    string SelectedClientName = SelectedClient.Name;
-                    string moveClientName = moveClient.Name;
-
-                    BankModel contextLocal = new BankModel();
-                    contextLocal.Clients.Load();
-                    foreach (var clientL in contextLocal.Clients)
+                    moveClient = kvp.Key;
+                    moveMoney = kvp.Value;
+                    if (SelectedClient.Money >= moveMoney)
                     {
-                        if (clientL.Id == SelectedClient.Id)
-                            SelectedClient = clientL;
-                        if (clientL.Id == moveClient.Id)
-                            moveClient = clientL;
-                    }
-                    SelectedClient.Money -= moveMoney;
-                    moveClient.Money += moveMoney;
-                    contextLocal.SaveChanges();
+                        int moveClientMoney = moveMoney;
+                        string SelectedClientName = SelectedClient.Name;
+                        string moveClientName = moveClient.Name;
 
-                    int id = 0;
-                    switch (SelectedDep)
-                    {
-                        case "Физ. лицо":
-                            id = 1;
-                            break;
-                        case "Юр. лицо":
-                            id = 2;
-                            break;
-                        case "VIP":
-                            id = 3;
-                            break;
+                        BankModel contextLocal = new BankModel();
+                        contextLocal.Clients.Load();
+                        foreach (var clientL in contextLocal.Clients)
+                        {
+                            if (clientL.Id == SelectedClient.Id)
+                                SelectedClient = clientL;
+                            if (clientL.Id == moveClient.Id)
+                                moveClient = clientL;
+                        }
+                        SelectedClient.Money -= moveMoney;
+                        moveClient.Money += moveMoney;
+                        contextLocal.SaveChanges();
+
+                        int id = 0;
+                        switch (SelectedDep)
+                        {
+                            case "Физ. лицо":
+                                id = 1;
+                                break;
+                            case "Юр. лицо":
+                                id = 2;
+                                break;
+                            case "VIP":
+                                id = 3;
+                                break;
+                        }
+                        IQueryable<Client> clients1 = null;
+                        if (SelectedDep != null)
+                            clients1 = context.Clients.Where(e => e.Department == id);
+                        else
+                            clients1 = context.Clients;
+                        clientsList.Clear();
+                        foreach (var item in clients1)
+                        {
+                            if (!clientsList.Contains(item))
+                                clientsList.Add(item);
+                        }
+                        Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.MoveMoney, $"Переведена сумма '{moveClientMoney}' с счёта '{SelectedClientName}' на счёт '{moveClientName}'"));
                     }
-                    IQueryable<Client> clients1 = null;
-                    if (SelectedDep != null)
-                        clients1 = context.Clients.Where(e => e.Department == id);
                     else
-                        clients1 = context.Clients;
-                    clientsList.Clear();
-                    foreach (var item in clients1)
                     {
-                        if (!clientsList.Contains(item))
-                            clientsList.Add(item);
+                        MessageBox.Show($"На счёту клиента {SelectedClient} недостаточно средств", "Перевести на другой счёт");
                     }
-                    Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.MoveMoney, $"Переведена сумма '{moveClientMoney}' с счёта '{SelectedClientName}' на счёт '{moveClientName}'"));
                 }
-                else
-                {
-                    MessageBox.Show($"На счёту клиента {SelectedClient} недостаточно средств", "Перевести на другой счёт");
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Перевести на другой счёт");
             }
         }
         #endregion
@@ -411,48 +421,39 @@ namespace HomeWork_18_WPF.ViewModel
                 var a = new DelegateCommand((obj) =>
                 {
                     try
-                    { 
+                    {
                         if (SelectedClient == null)
                         {
                             throw new NoSelectClientException("Не выбран клиент");
                         }
                         else
-                        { 
+                        {
                             var displayRootRegistry = (Application.Current as App).displayRootRegistry;
                             var addDepositNoCapitalizeViewModel = new AddDepositNoCapitalizeViewModel();
                             Dictionary<BankDepartment, uint> bd = new Dictionary<BankDepartment, uint>();
-                        //    switch (SelectedClient.BankDepartmentProp)
-                        //{
-                        //    case BankDepartment.BusinessDepartment:
-                        //        bd.Add(BankDepartment.BusinessDepartment, 0);
-                        //        Messenger.Default.Send(bd);
-                        //        displayRootRegistry.ShowModalPresentation(addDepositNoCapitalizeViewModel);
-                        //        break;
-                        //    case BankDepartment.PersonalDepartment:
-                        //        bd.Add(BankDepartment.PersonalDepartment, 0);
-                        //        Messenger.Default.Send(bd);
-                        //        displayRootRegistry.ShowModalPresentation(addDepositNoCapitalizeViewModel);
-                        //        break;
-                        //    case BankDepartment.VIPDepartment:
-                        //        bd.Add(BankDepartment.VIPDepartment, 0);
-                        //        Messenger.Default.Send(bd);
-                        //        displayRootRegistry.ShowModalPresentation(addDepositNoCapitalizeViewModel);
-                        //        break;
-                        //}
-                        //    if (SelectedClient.DepositClient != null)
-                        //{
-                        //    SelectClientDeposit = SelectedClient.DepositClientStr;
-                        //    SelectClientInterestRate = SelectedClient.DepositClient.InterestRate;
-                        //    SelectClientDataBegin = SelectedClient.DepositClient.DateBegin.ToLongDateString();
-                        //    SelectClientDays = SelectedClient.DepositClient.Days;
-                        //}
+                            switch (SelectedClient.Department)
+                            {
+                                case 2:
+                                    bd.Add(BankDepartment.BusinessDepartment, 0);
+                                    Messenger.Default.Send(bd);
+                                    displayRootRegistry.ShowModalPresentation(addDepositNoCapitalizeViewModel);
+                                    break;
+                                case 1:
+                                    bd.Add(BankDepartment.PersonalDepartment, 0);
+                                    Messenger.Default.Send(bd);
+                                    displayRootRegistry.ShowModalPresentation(addDepositNoCapitalizeViewModel);
+                                    break;
+                                case 3:
+                                    bd.Add(BankDepartment.VIPDepartment, 0);
+                                    Messenger.Default.Send(bd);
+                                    displayRootRegistry.ShowModalPresentation(addDepositNoCapitalizeViewModel);
+                                    break;
+                            }
                         }
-                        //else
-                        //    MessageBox.Show("Не выбран клиент", "Открыть вклад без капитализации %");
                     }
-                    catch (NoSelectClientException ex)
+                    catch (Exception ex)
                     {
-                        MessageBox.Show(ex.Message, "Перевести на другой счёт");
+                        MessageBox.Show(ex.Message, "Открыть вклад без капитализации %");
                     }
                 });
                 return a;
@@ -465,8 +466,26 @@ namespace HomeWork_18_WPF.ViewModel
         /// <param name="deposit"></param>
         public static void ReturnAddDepositNoCapitalize(Model.DepositC deposit)
         {
-            //SelectedClient.DepositClient = deposit;
-            //SelectedClient.DepositClientStr = "вклад без капитализации %";
+            // обновленние данных для текущего content
+            #region обновленние данных для текущего content
+            SelectedClient.DateOpen = deposit.DateBegin;
+            SelectedClient.Deposit = 1;
+            SelectedClient.Days = deposit.Days;
+            SelectedClient.Rate = deposit.InterestRate;
+            #endregion
+
+            BankModel contextLocal = new BankModel();
+            contextLocal.Clients.Load();
+            foreach (var clientL in contextLocal.Clients)
+            {
+                if (clientL.Id == SelectedClient.Id)
+                    SelectedClient = clientL;
+            }
+            SelectedClient.DateOpen = deposit.DateBegin;
+            SelectedClient.Deposit = 1;
+            SelectedClient.Days = deposit.Days;
+            SelectedClient.Rate = deposit.InterestRate;
+            contextLocal.SaveChanges();
             Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.AddDepositNoCapitalize, $"Открыт вклад без капитализации % для '{SelectedClient.Name}'"));
         }
         #endregion
@@ -483,44 +502,35 @@ namespace HomeWork_18_WPF.ViewModel
                 var a = new DelegateCommand((obj) =>
                 {
                     try
-                    { 
+                    {
                         if (SelectedClient == null)
                         {
                             throw new NoSelectClientException("Не выбран клиент");
                         }
                         else
-                        { 
+                        {
                             var displayRootRegistry = (Application.Current as App).displayRootRegistry;
                             var addDepositCapitalizeViewModel = new AddDepositCapitalizeViewModel();
-                        //    switch (SelectedClient.BankDepartmentProp)
-                        //{
-                        //    case BankDepartment.BusinessDepartment:
-                        //        Messenger.Default.Send(BankDepartment.BusinessDepartment);
-                        //        displayRootRegistry.ShowModalPresentation(addDepositCapitalizeViewModel);
-                        //        break;
-                        //    case BankDepartment.PersonalDepartment:
-                        //        Messenger.Default.Send(BankDepartment.PersonalDepartment);
-                        //        displayRootRegistry.ShowModalPresentation(addDepositCapitalizeViewModel);
-                        //        break;
-                        //    case BankDepartment.VIPDepartment:
-                        //        Messenger.Default.Send(BankDepartment.VIPDepartment);
-                        //        displayRootRegistry.ShowModalPresentation(addDepositCapitalizeViewModel);
-                        //        break;
-                        //}
-                        //    if (SelectedClient.DepositClient != null)
-                        //{
-                        //    SelectClientDeposit = SelectedClient.DepositClientStr;
-                        //    SelectClientInterestRate = SelectedClient.DepositClient.InterestRate;
-                        //    SelectClientDataBegin = SelectedClient.DepositClient.DateBegin.ToLongDateString();
-                        //    SelectClientDays = SelectedClient.DepositClient.Days;
-                        //}
+                            switch (SelectedClient.Department)
+                            {
+                                case 2:
+                                    Messenger.Default.Send(BankDepartment.BusinessDepartment);
+                                    displayRootRegistry.ShowModalPresentation(addDepositCapitalizeViewModel);
+                                    break;
+                                case 1:
+                                    Messenger.Default.Send(BankDepartment.PersonalDepartment);
+                                    displayRootRegistry.ShowModalPresentation(addDepositCapitalizeViewModel);
+                                    break;
+                                case 3:
+                                    Messenger.Default.Send(BankDepartment.VIPDepartment);
+                                    displayRootRegistry.ShowModalPresentation(addDepositCapitalizeViewModel);
+                                    break;
+                            }
                         }
-                        //else
-                        //    MessageBox.Show("Не выбран клиент", "Открыть вклад с капитализацией %");
                     }
-                    catch (NoSelectClientException ex)
+                    catch (Exception ex)
                     {
-                        MessageBox.Show(ex.Message, "Перевести на другой счёт");
+                        MessageBox.Show(ex.Message, "Открыть вклад с капитализацией %");
                     }
                 });
                 return a;
@@ -533,9 +543,26 @@ namespace HomeWork_18_WPF.ViewModel
         /// <param name="deposit"></param>
         public static void ReturnAddDepositCapitalize(Model.DepositC deposit)
         {
-            //SelectedClient.DepositClient = deposit;
-            //SelectedClient.DepositClientStr = "вклад с капитализацией %";
-            //Messenger.Default.Send($"{DateTime.Now} Открыт вклад c капитализацией % для '{SelectedClient.Name}'");
+            // обновленние данных для текущего content
+            #region обновленние данных для текущего content
+            SelectedClient.DateOpen = deposit.DateBegin;
+            SelectedClient.Deposit = 2;
+            SelectedClient.Days = deposit.Days;
+            SelectedClient.Rate = deposit.InterestRate;
+            #endregion
+
+            BankModel contextLocal = new BankModel();
+            contextLocal.Clients.Load();
+            foreach (var clientL in contextLocal.Clients)
+            {
+                if (clientL.Id == SelectedClient.Id)
+                    SelectedClient = clientL;
+            }
+            SelectedClient.DateOpen = deposit.DateBegin;
+            SelectedClient.Deposit = 2;
+            SelectedClient.Days = deposit.Days;
+            SelectedClient.Rate = deposit.InterestRate;
+            contextLocal.SaveChanges();
             Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.AddDepositCapitalize, $"Открыт вклад c капитализацией % для '{SelectedClient.Name}'"));
         }
         #endregion
@@ -559,20 +586,19 @@ namespace HomeWork_18_WPF.ViewModel
                         }
                         else
                         { 
-                            //if (SelectedClient.DepositClient != null)
-                            //{
-                            //    var displayRootRegistry = (Application.Current as App).displayRootRegistry;
-
-                            //    var rateViewModel = new RateViewModel();
-                            //    Dictionary<Client, short> client = new Dictionary<Client, short>();
-                            //    client.Add(SelectedClient, 0);
-                            //    Messenger.Default.Send(client);
-                            //    displayRootRegistry.ShowModalPresentation(rateViewModel);
-                            //    Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.RateView, $"Показано окно с расчётом % для '{SelectedClient.Name}'"));
-                            //}
+                            if (SelectedClient.Deposit > 0)
+                            {
+                                var displayRootRegistry = (Application.Current as App).displayRootRegistry;
+                                var rateViewModel = new RateViewModel();
+                                Dictionary<Client, short> client = new Dictionary<Client, short>();
+                                client.Add(SelectedClient, 0);
+                                Messenger.Default.Send(client);
+                                displayRootRegistry.ShowModalPresentation(rateViewModel);
+                                Messenger.Default.Send(new MessageParam(DateTime.Now, MessageType.RateView, $"Показано окно с расчётом % для '{SelectedClient.Name}'"));
+                            }
                         }
                     }
-                    catch (NoSelectClientException ex)
+                    catch (Exception ex)
                     {
                         MessageBox.Show(ex.Message, "Перевести на другой счёт");
                     }

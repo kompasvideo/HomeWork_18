@@ -16,12 +16,11 @@ namespace HomeWork_18_WPF.ViewModel
         /// Принимает параметр типа Client
         /// </summary>
         /// <param name="client"></param>
-        public static void SetClient(Dictionary<HomeWork_18_WPF.Model.Client, short> client)
+        public static void SetClient(Dictionary<Client, short> client)
         {
-            foreach (KeyValuePair<HomeWork_18_WPF.Model.Client, short> kvp in client)
+            foreach (KeyValuePair<Client, short> kvp in client)
             {
-                HomeWork_18_WPF.Model.Client l_client = kvp.Key;
-                //MoneyRate = l_client.DepositClient.GetSumRate(l_client.Money);
+                Client l_client = kvp.Key;                
                 MoneyRate = l_client.GetSumRateExt();
             }
         }
